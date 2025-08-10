@@ -1,4 +1,4 @@
-package com.edu.inatel.br.loginService;
+package com.edu.inatel.br.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,13 +1,13 @@
-package com.edu.inatel.br.restaurantService;
+package com.edu.inatel.br.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RestaurantServiceApplication {
+public class PromotionServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RestaurantServiceApplication.class, args);
+		SpringApplication.run(PromotionServiceApplication.class, args);
 	}
 
 }

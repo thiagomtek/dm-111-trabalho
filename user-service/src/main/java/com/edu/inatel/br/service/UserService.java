@@ -1,31 +1,53 @@
 package com.edu.inatel.br.service;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.edu.inatel.br.model.User;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.CollectionReference;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.storage.Acl.User;
+import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.cloud.FirestoreClient;
 
+@Service
 public class UserService {
+	private static final String COLLECTION_NAME = "users";
 
-	public User findUserByEmail(String email) {
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
-		try {
-			Firestore db = FirestoreClient.getFirestore();
-			CollectionReference usersCollection = db.collection("users");
+	public User createUser(User user) throws ExecutionException, InterruptedException {
 
-			Query query = usersCollection.whereEqualTo("email", email);
-			ApiFuture<QuerySnapshot> querySnapshot = query.get();
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
+		Firestore db = FirestoreClient.getFirestore();
+		ApiFuture<WriteResult> future = db.collection(COLLECTION_NAME).document(user.getEmail()).set(user);
+		future.get();
+		return user;
+	}
 
-			if (querySnapshot.get().isEmpty()) {
-				throw new RuntimeException("Usuário não encontrado com o e-mail: " + email);
-			}
-
-			return querySnapshot.get().getDocuments().get(0).toObject(User.class);
-		} catch (Exception e) {
-			throw new RuntimeException("Erro ao buscar usuário no Firebase", e);
+	public User findUserByEmail(String email) throws ExecutionException, InterruptedException {
+		Firestore db = FirestoreClient.getFirestore();
+		DocumentReference docRef = db.collection(COLLECTION_NAME).document(email);
+		ApiFuture<DocumentSnapshot> future = docRef.get();
+		DocumentSnapshot document = future.get();
+		if (document.exists()) {
+			return document.toObject(User.class);
+		} else {
+			throw new RuntimeException("Usuário não encontrado");
 		}
+	}
+
+	public User updatePreferredCategories(String userId, List<String> categories)
+			throws ExecutionException, InterruptedException {
+		Firestore db = FirestoreClient.getFirestore();
+		DocumentReference docRef = db.collection(COLLECTION_NAME).document(userId);
+		docRef.update("preferredCategories", categories).get();
+		return findUserByEmail(userId);
 	}
 }
